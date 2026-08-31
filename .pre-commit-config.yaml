@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        entry: npx eslint
+        language: system
+        files: \.(js|jsx|ts|tsx)$
+        exclude: ^node_modules/
+
+#repos:
+#  - repo: https://github.com/pre-commit/mirrors-eslint
+#    rev: v9.9.0
+#    hooks:
+#      - id: eslint
+#        additional_dependencies:
+#          - eslint-plugin-security@^3.0.0   # ← would need to duplicate this here

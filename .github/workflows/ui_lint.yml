@@ -1,9 +1,35 @@
+#name: Lint and Security Checks (UI)
+#
+#on:
+#  push:
+#  pull_request:
+#    types: [opened, synchronize, reopened]
+#
+#jobs:
+#  lint-and-security:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout repo
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '22'
+#
+#      - name: Install dependencies
+#        run: npm install
+#
+#      - name: Run ESLint (lint + security)
+#        run: npx eslint . --ext .ts,.tsx
+#
+
 name: Lint and Security Checks (UI)
 
 on:
-  push:
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [develop]
 
 jobs:
   lint-and-security:
@@ -12,14 +38,39 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run ESLint (lint + security)
-        run: npx eslint . --ext .ts,.tsx
+      - name: Get changed TS/TSX files
+        id: changed-files
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACMR \
+            ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} \
+            -- '*.ts' '*.tsx')
+
+          if [ -z "$CHANGED" ]; then
+            echo "No TS/TSX files changed."
+          fi
+
+          {
+            echo "files<<EOF"
+            echo "$CHANGED"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run ESLint (lint + security) on changed files
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          echo "${{ steps.changed-files.outputs.files }}" | xargs npx eslint --max-warnings=0
+
+      - name: Run npm audit (dependency vulnerabilities)
+        run: npm audit --audit-level=high
