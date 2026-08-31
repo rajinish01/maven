@@ -25,4 +25,10 @@ function buildRegex(pattern: string) {
   return new RegExp(pattern);
 }
 
-export { processData, runUserCode, runCommand, buildRegex };
+// Unsafe dynamically-built regex -> triggers security/detect-non-literal-regexp
+function buildRegexRepo(pattern: string) {
+  return new RegExp(pattern);
+}
+
+export { processData, runUserCode, runCommand, buildRegex, buildRegexRepo};
+
