@@ -37,12 +37,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           # cache: 'npm'
@@ -59,13 +59,18 @@ jobs:
 
           if [ -z "$CHANGED" ]; then
             echo "No TS/TSX files changed."
+            echo "files=" >> "$GITHUB_OUTPUT"
+
+          else
+            echo "Changed files:"
+            echo "$CHANGED"
+            {
+              echo "files<<EOF"
+              echo "$CHANGED"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           fi
 
-          {
-            echo "files<<EOF"
-            echo "$CHANGED"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Run ESLint (lint + security) on changed files
         if: steps.changed-files.outputs.files != ''
